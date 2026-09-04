@@ -76,7 +76,6 @@ async def create_user(session: AsyncSession, email: str, full_name: str | None ,
 async def get_user_by_email(session: AsyncSession, email: str):
     try:
         result = await session.execute(select(User).where(User.email == email))
-        await session.commit()
         return result.scalar_one_or_none()
     
     except Exception as e:

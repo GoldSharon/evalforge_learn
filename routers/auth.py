@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -23,12 +24,14 @@ async def register(user: UserCreate, session: AsyncSession = Depends(get_session
         raise HTTPException(status_code=400, detail="Email already registered")
 
 @router.post("/login")
-async def login(email: str, password: str, session: AsyncSession = Depends(get_session)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_session)):
 
-    result = await get_user_by_email(session, email)
+    result = await get_user_by_email(session, form_data.username )
 
     if result:
-        if verify_password(password, result.hashed_password):
+        if verify_password(form_data.password, result.hashed_password):
             token = create_access_token(data={"sub": result.id})
             return {"access_token": token, "token_type": "bearer"}
         else:

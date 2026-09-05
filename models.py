@@ -34,6 +34,8 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
+    role: Mapped[str] = mapped_column(String, nullable=False, default="member")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 class Company(Base):

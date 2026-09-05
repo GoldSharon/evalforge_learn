@@ -6,7 +6,7 @@ from database import get_session
 from schemas import DatasetCreate, DatasetResponse, DatasetUpdate
 
 from models import User
-from dependencies import get_current_user
+from dependencies import get_current_user, require_role
 from routers import auth
 import crud
 
@@ -35,7 +35,7 @@ async def view_dataset(
 async def delete_dataset(
     dataset_id: str,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role("admin"))
 ):
     result = await crud.delete_dataset(session= session, dataset_id= dataset_id)
 
@@ -56,3 +56,4 @@ async def update_dataset(
         return result
     else:
         return {"message": "Unable to update dataset"}
+

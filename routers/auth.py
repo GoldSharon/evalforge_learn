@@ -9,6 +9,8 @@ from schemas import UserCreate, UserResponse
 from crud import create_user,get_user_by_email
 from auth import verify_password
 from jwt_utils import create_access_token
+from dependencies import get_current_user
+from models import User
 
 router = APIRouter(prefix= "/auth", tags=["auth"])
 
@@ -38,6 +40,13 @@ async def login(
             raise HTTPException(status_code=400, detail="User password is incorrect")
     else:
         raise HTTPException(status_code=400, detail="User is not registered")
+
+@router.get("/me", response_model= UserResponse)
+async def get_me(
+    current_user: User = Depends(get_current_user)
+):
+    return current_user
+    
     
         
 

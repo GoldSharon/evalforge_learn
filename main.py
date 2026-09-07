@@ -57,3 +57,9 @@ async def update_dataset(
     else:
         return {"message": "Unable to update dataset"}
 
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status" : "healthy"
+    }

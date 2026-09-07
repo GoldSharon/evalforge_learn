@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -9,13 +9,13 @@ class DatasetCreate(BaseModel):
 
 
 class DatasetResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str 
     name: str 
     description: Optional[str] = None 
     created_at : datetime
 
-    class Config:
-        from_attributes = True
 
 class DatasetUpdate(BaseModel):
     name: Optional[str] = None 
@@ -27,11 +27,12 @@ class UserCreate(BaseModel):
     password: str 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+
     id:str 
     email: str
     full_name: str | None = None 
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True

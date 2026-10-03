@@ -1,28 +1,17 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
+from core.database import AsyncSessionLocal
+
+import uuid
+
+
 from main import app
-
-
+from auth.models import User 
 
 @pytest.mark.asyncio
-async def test_create_dataset(clean_test_user,clean_test_dataset):
+async def test_create_dataset(member_token,cleanup_test_dataset):
 
-    async with ASGITransport(transport=AsyncClient(app=app), base_url="http://test") as client:
-
-        register_response = await client.post("/auth/register", json={
-            "email": "testuser@test.com",
-            "full_name": "Test User",
-            "password": "Test@1234"
-        })
-
-        assert register_response.status_code == 200
-
-        login_response = await client.post("/auth/login", data={
-            "username": "testuser@test.com",
-            "password": "Test@1234"
-        })
-
-        assert login_response.status_code == 200
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
 
         create_dataset_response = await client.post(
             "/datasets",
@@ -31,35 +20,22 @@ async def test_create_dataset(clean_test_user,clean_test_dataset):
                 "description": "Using for training CNN"
             },
             headers = {
-                "Authorization": f"Bearer {login_response.json()["access_token"]}"
+                "Authorization": f"Bearer {member_token}"
             }
         )
 
-        assert create_dataset_response.status_code = 200
+        assert create_dataset_response.status_code == 200
         assert "id" in create_dataset_response.json()
         assert "created_at" in create_dataset_response.json()
         assert "description" in create_dataset_response.json()
+        cleanup_test_dataset.append(create_dataset_response.json()["id"])
+
+
 
 
 @pytest.mark.asyncio
-async def test_delete_dataset_as_member(cleanup_test_user):
+async def test_delete_dataset_as_member(member_token,cleanup_test_dataset):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-
-        register_response = await client.post("/auth/register", json={
-            "email": "testuser@test.com",
-            "full_name": "Test User",
-            "password": "Test@1234"
-        })
-
-        assert register_response.status_code == 200
-
-        login_response = await client.post("/auth/login", data={
-            "username": "testuser@test.com",
-            "password": "Test@1234"
-        })
-
-        assert login_response.status_code == 200
-
 
         create_dataset_response = await client.post(
             "/datasets",
@@ -68,7 +44,7 @@ async def test_delete_dataset_as_member(cleanup_test_user):
             "description": "User for training CNN"
         },
             headers= {
-                "Authorization": f"Bearer {login_response.json()["access_token"]}"
+                "Authorization": f"Bearer {member_token}"
             }
         )
 
@@ -77,28 +53,21 @@ async def test_delete_dataset_as_member(cleanup_test_user):
         assert "created_at" in create_dataset_response.json()
         assert "description" in create_dataset_response.json()
 
+        cleanup_test_dataset.append(create_dataset_response.json()["id"])
+
         delete_dataset_response = await client.delete(f'''/datasets/{create_dataset_response.json()["id"]}''', 
         headers= {
-                    "Authorization": f"Bearer {login_response.json()["access_token"]}"
+                    "Authorization": f"Bearer {member_token}"
                 }
         )
-
 
         assert delete_dataset_response.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_delete_dataset_as_admin(cleanup_test_user):
+async def test_delete_dataset_as_admin(admin_token,cleanup_test_dataset):
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-
-
-        login_response = await client.post("/auth/login", data={
-            "username": "GoldSharonR@hexaware.com",
-            "password": "Admin@1234"
-        })
-
-        assert login_response.status_code == 200
-
 
         create_dataset_response = await client.post(
             "/datasets",
@@ -107,7 +76,7 @@ async def test_delete_dataset_as_admin(cleanup_test_user):
             "description": "User for training CNN"
         },
             headers= {
-                "Authorization": f"Bearer {login_response.json()["access_token"]}"
+                "Authorization": f"Bearer {admin_token}"
             }
         )
 
@@ -118,9 +87,11 @@ async def test_delete_dataset_as_admin(cleanup_test_user):
 
         delete_dataset_response = await client.delete(f'''/datasets/{create_dataset_response.json()["id"]}''', 
         headers= {
-                    "Authorization": f"Bearer {login_response.json()["access_token"]}"
+                    "Authorization": f"Bearer {admin_token}"
                 }
         )
-
-
+        cleanup_test_dataset.append(create_dataset_response.json()["id"])
         assert delete_dataset_response.status_code == 200
+
+
+

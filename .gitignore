@@ -3,3 +3,9 @@ __pycache__/
 .env
 .vscode/
 *.db
+.agents
+.aws
+.deepeval
+.pytest_cache
+.codex/
+
